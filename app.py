@@ -189,7 +189,18 @@ def execute_research_pipeline(
     keywords = clean_keywords(raw_keywords)
 
     with status_container:
-        st.markdown("### 🔄 Research Pipeline Active")
+        st.markdown(
+            """
+            <div style="background: #111827; border: 1px solid #1E293B; border-radius: 8px; padding: 14px 16px; margin: 16px 0 10px 0;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="width: 10px; height: 10px; border-radius: 50%; background: #3B82F6; display: inline-block; box-shadow: 0 0 10px #3B82F6;"></span>
+                    <span style="font-size: 15px; font-weight: 700; color: #F8FAFC;">Research Pipeline Active</span>
+                    <span style="font-size: 11px; background: #1E293B; color: #94A3B8; padding: 2px 6px; border-radius: 4px;">RUNNING LIVE</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
         progress_bar = st.progress(0)
         status_text = st.empty()
         log_box = st.empty()
@@ -380,7 +391,8 @@ def render_new_research_page():
                 )
                 if new_session:
                     st.session_state["active_session"] = new_session
-                    time.sleep(1.5)
+                    st.session_state["pipeline_success"] = True
+                    time.sleep(2.0)
                     st.session_state["current_page"] = "Dashboard"
                     st.rerun()
 

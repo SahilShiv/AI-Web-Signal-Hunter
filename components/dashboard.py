@@ -19,6 +19,10 @@ def render_dashboard(session: Optional[ResearchSession]):
         st.warning("No active research session loaded. Please start a research session or select one from Research History.")
         return
 
+    if st.session_state.get("pipeline_success"):
+        st.success("✓ Live Research Pipeline Completed! Fresh intelligence gathered and synthesized into your dashboard.")
+        st.session_state["pipeline_success"] = False
+
     # A. Header
     st.markdown(
         f"""
@@ -68,6 +72,21 @@ def render_dashboard(session: Optional[ResearchSession]):
         )
 
     st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+
+    # Active Pipeline Status Banner
+    st.markdown(
+        f"""
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981; display: inline-block; box-shadow: 0 0 8px #10B981;"></span>
+                <span style="font-size: 13px; font-weight: 700; color: #10B981; letter-spacing: 0.04em;">RESEARCH PIPELINE ACTIVE & SYNCED</span>
+                <span style="font-size: 12px; color: #94A3B8;">— {session.pages_crawled_count} verified pages across {session.unique_domains_count} domains ({session.ai_provider})</span>
+            </div>
+            <span style="font-size: 11px; background: #1E293B; color: #38BDF8; padding: 3px 8px; border-radius: 4px; font-weight: 600;">STATUS: HEALTHY</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     # B. Overview Metrics (4 meaningful metrics)
     m1, m2, m3, m4 = st.columns(4)
