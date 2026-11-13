@@ -1,5 +1,7 @@
 # AI Web Signal Hunter ⚡
 
+**WebSite Link:-** https://ai-web-signal-hunter-0kr5.onrender.com/
+
 **AI Web Signal Hunter** is a production-grade web intelligence platform designed to discover, crawl, and synthesize unstructured public web discussions into prioritized, evidence-grounded B2B business opportunities.
 
 Instead of generic web scrapers or static dashboards, the platform implements an end-to-end intelligence pipeline: discovering permitted public discussions across diverse domains, executing ethical robots.txt-compliant crawling, deduplicating content, extracting structured business signals using Large Language Models (Groq / Google Gemini), clustering recurring pain points, calculating transparent opportunity scores, and generating actionable opportunity briefs.
