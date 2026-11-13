@@ -113,7 +113,7 @@ class SearchEngine:
         seen_domains: Set[str] = set()
         seen_urls: Set[str] = set()
 
-        search_queries = self._build_queries(topic, keywords)
+        search_queries = self._build_queries(topic, keywords)[:2]
         logger.info(f"Generated {len(search_queries)} search angles for discovery")
 
         # 1. Attempt dynamic search discovery via DuckDuckGo
@@ -131,7 +131,6 @@ class SearchEngine:
                         seen_domains.add(domain)
                         if len(discovered_urls) >= max_urls:
                             break
-                time.sleep(0.3)
             except Exception as e:
                 logger.warning(f"Search query '{query}' encountered issue: {e}")
 
@@ -181,15 +180,15 @@ class SearchEngine:
         return angles
 
     def _search_ddgs(self, query: str, max_results: int = 10) -> List[dict]:
-        """Queries DuckDuckGo search."""
+        """Queries DuckDuckGo search with strict timeout to prevent thread blocking."""
         try:
             from ddgs import DDGS
-            with DDGS() as ddgs:
+            with DDGS(timeout=2.0) as ddgs:
                 return list(ddgs.text(query, max_results=max_results))
         except ImportError:
             try:
                 from duckduckgo_search import DDGS
-                with DDGS() as ddgs:
+                with DDGS(timeout=2.0) as ddgs:
                     return list(ddgs.text(query, max_results=max_results))
             except Exception as e:
                 logger.warning(f"DDGS search failed: {e}")

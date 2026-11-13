@@ -19,7 +19,7 @@ from utils.helpers import compute_sha256, count_words
 class RobotsChecker:
     """Caches and validates robots.txt policies per domain."""
 
-    def __init__(self, user_agent: str, timeout: float = 4.0):
+    def __init__(self, user_agent: str, timeout: float = 1.5):
         self.user_agent = user_agent
         self.timeout = timeout
         self.parsers: Dict[str, RobotFileParser] = {}
@@ -66,8 +66,8 @@ class WebCrawler:
         request_delay: Optional[float] = None
     ):
         self.user_agent = user_agent or settings.user_agent
-        self.request_timeout = request_timeout or settings.request_timeout
-        self.request_delay = request_delay or settings.request_delay
+        self.request_timeout = request_timeout or min(4, settings.request_timeout)
+        self.request_delay = request_delay or 0.05
         self.cleaner = ContentCleaner()
         self.deduplicator = Deduplicator()
         self.robots_checker = RobotsChecker(self.user_agent)

@@ -189,25 +189,13 @@ def execute_research_pipeline(
     keywords = clean_keywords(raw_keywords)
 
     with status_container:
-        st.markdown(
-            """
-            <div style="background: #111827; border: 1px solid #1E293B; border-radius: 8px; padding: 14px 16px; margin: 16px 0 10px 0;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="width: 10px; height: 10px; border-radius: 50%; background: #3B82F6; display: inline-block; box-shadow: 0 0 10px #3B82F6;"></span>
-                    <span style="font-size: 15px; font-weight: 700; color: #F8FAFC;">Research Pipeline Active</span>
-                    <span style="font-size: 11px; background: #1E293B; color: #94A3B8; padding: 2px 6px; border-radius: 4px;">RUNNING LIVE</span>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
         progress_bar = st.progress(0)
         status_text = st.empty()
         log_box = st.empty()
 
         def update_progress(pct: int, msg: str):
             progress_bar.progress(pct)
-            status_text.markdown(f"**Step Progress:** {msg}")
+            status_text.markdown(f"**Current Stage:** {msg}")
 
         # Phase 1: Web Discovery
         update_progress(5, "Discovering candidate public pages across independent domains...")
@@ -296,7 +284,7 @@ def execute_research_pipeline(
 
         # Phase 6: Persistence in SQLite
         update_progress(98, "Persisting findings to local database...")
-        db_service: DatabaseService = st.session_state["db_service"]
+        db_service: DatabaseService = st.session_state.get("db_service") or DatabaseService(DatabaseManager())
         db_service.save_session(session, pages=crawled_pages)
 
         update_progress(100, "Research completed successfully!")
@@ -321,24 +309,51 @@ def render_new_research_page():
     )
 
     with st.container():
-        # Example queries expander
-        with st.expander("💡 Recommended Research Prompts (Click to explore)", expanded=False):
-            st.markdown(
-                """
-                - **What problems do small businesses face with WhatsApp automation tools?**
-                - **What features are customers requesting from AI meeting assistants?**
-                - **What complaints and opportunities exist in EV charging services?**
-                - **What are the common problems faced by users of project management software?**
-                - **What are customers saying about AI-powered resume builders?**
-                """
-            )
+        # Quick-fill example buttons
+        with st.expander("💡 1-Click Example Topics (Click any to auto-fill)", expanded=False):
+            ex_col1, ex_col2 = st.columns(2)
+            with ex_col1:
+                if st.button("📱 WhatsApp Automation Issues (Benchmark)", use_container_width=True):
+                    st.session_state["selected_topic"] = "What problems do small businesses face with WhatsApp automation tools?"
+                    st.session_state["selected_keywords"] = "pricing, bans, CRM, integration, onboarding"
+                    st.rerun()
+                if st.button("🎙️ AI Meeting Assistants & Note-Takers", use_container_width=True):
+                    st.session_state["selected_topic"] = "What complaints and feature requests do users have for AI meeting assistants?"
+                    st.session_state["selected_keywords"] = "privacy, hallucinations, zoom, google meet, action items"
+                    st.rerun()
+                if st.button("🔋 EV Charging Public Infrastructure", use_container_width=True):
+                    st.session_state["selected_topic"] = "What complaints and operational issues do EV drivers face with public charging stations?"
+                    st.session_state["selected_keywords"] = "broken chargers, payment apps, queue times, pricing"
+                    st.rerun()
+            with ex_col2:
+                if st.button("📄 AI Resume Builders & Job Application Bots", use_container_width=True):
+                    st.session_state["selected_topic"] = "What are job seekers saying about AI-powered resume builders and application bots?"
+                    st.session_state["selected_keywords"] = "ats rejection, formatting, subscription trap, generic cover letters, pricing"
+                    st.rerun()
+                if st.button("📊 Project Management Tools (Jira / Asana)", use_container_width=True):
+                    st.session_state["selected_topic"] = "What are the common frustrations and hidden costs of project management software?"
+                    st.session_state["selected_keywords"] = "jira, clickup, asana, lag, per-seat pricing"
+                    st.rerun()
+                if st.button("🛍️ Shopify E-Commerce Returns & Refunds", use_container_width=True):
+                    st.session_state["selected_topic"] = "What challenges do Shopify merchants face with returns and refund management?"
+                    st.session_state["selected_keywords"] = "return fraud, shipping costs, exchange rate, restock delay"
+                    st.rerun()
+
+        default_topic = st.session_state.get(
+            "selected_topic",
+            "What problems do small businesses face with WhatsApp automation tools?"
+        )
+        default_keywords = st.session_state.get(
+            "selected_keywords",
+            "pricing, bans, CRM, integration, onboarding"
+        )
 
         col1, col2 = st.columns([3, 1])
 
         with col1:
             topic_input = st.text_input(
                 "Primary Research Topic / Business Question *",
-                value="What problems do small businesses face with WhatsApp automation tools?",
+                value=default_topic,
                 placeholder="e.g. What are the common complaints with project management tools?"
             )
 
@@ -351,7 +366,7 @@ def render_new_research_page():
 
         keywords_input = st.text_input(
             "Optional Focus Keywords (comma-separated)",
-            value="pricing, bans, CRM, integration, onboarding",
+            value=default_keywords,
             placeholder="e.g. pricing, latency, bugs, support"
         )
 
@@ -373,26 +388,26 @@ def render_new_research_page():
                 step=5
             )
 
-        status_container = st.container()
-
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
         if st.button("🚀 Start Intelligence Pipeline", type="primary", use_container_width=True):
-            if not topic_input or len(topic_input.strip()) < 5:
-                st.error("Please enter a valid research topic or business question (at least 5 characters).")
-            else:
+            clean_topic = topic_input.strip() if (topic_input and len(topic_input.strip()) >= 5) else default_topic
+            with st.status(f"🔄 Running Web Intelligence Pipeline for '{clean_topic[:35]}...' ", expanded=True) as pipeline_status:
+                pipeline_status.write(f"🔍 **Research Prompt:** {clean_topic}")
                 new_session = execute_research_pipeline(
-                    topic=topic_input.strip(),
+                    topic=clean_topic,
                     raw_keywords=keywords_input,
                     crawl_limit=crawl_limit,
                     ai_provider=provider_choice,
                     min_relevance=float(min_relevance),
-                    status_container=status_container
+                    status_container=pipeline_status
                 )
                 if new_session:
+                    pipeline_status.update(label="✓ Intelligence Pipeline Complete!", state="complete", expanded=False)
                     st.session_state["active_session"] = new_session
                     st.session_state["pipeline_success"] = True
-                    time.sleep(2.0)
+                    st.success("✓ Research finished successfully! Opening Executive Dashboard...")
+                    time.sleep(1.0)
                     st.session_state["current_page"] = "Dashboard"
                     st.rerun()
 
